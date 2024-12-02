@@ -3,17 +3,37 @@ package utils
 import (
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/text/width"
 )
 
-func StringWidth(s string) int {
-	w := 0
-	for _, ch := range s {
-		w += RuneWidth(ch)
-	}
-	return w
+func RuneToBytes(ch rune) []byte {
+	var buf [utf8.UTFMax]byte        // 最大4バイトのバッファを定義
+	n := utf8.EncodeRune(buf[:], ch) // バッファのスライスとしてエンコード
+	return buf[:n]                   // エンコードされたバイト列を返す
 }
+
+// RunesToBytes は、ルーンのスライスをバイトスライスに変換します。
+func RunesToBytes(runes []rune) []byte {
+	buf := make([]byte, 0, len(runes)*utf8.UTFMax)
+	for _, r := range runes {
+		n := utf8.EncodeRune(buf[len(buf):cap(buf)], r)
+		buf = buf[:len(buf)+n]
+	}
+	return buf
+}
+
+// RunesToBytes は、ルーンのスライスをバイトスライスに変換します。
+/*
+func RunesToBytes(runes []rune) []byte {
+	var buf []byte
+	for _, r := range runes {
+		buf = append(buf, []byte(string(r))...)
+	}
+	return buf
+}
+*/
 
 // Guess the width of the rune for console screen.
 //
@@ -112,4 +132,25 @@ func RemoveSymbols(s string) string {
 	}
 
 	return result.String()
+}
+
+/*
+func ReverseUTF8Bytes(bytes []byte) []byte {
+	r := []rune(string(bytes))
+	slices.Reverse(r)
+	return RunesToBytes(r)
+}
+*/
+
+// ReverseUTF8Bytes は、バイトスライスを逆順にする関数です。
+func ReverseUTF8Bytes(bytes []byte) []byte {
+	j := len(bytes)
+	results := make([]byte, j)
+	for i := 0; i < len(bytes); {
+		_, size := utf8.DecodeRune(bytes[i:])
+		copy(results[j-size:], bytes[i:i+size])
+		j -= size
+		i += size
+	}
+	return results
 }

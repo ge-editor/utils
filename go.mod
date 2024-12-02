@@ -1,5 +1,5 @@
 module github.com/ge-editor/utils
 
-go 1.22
+go 1.23.3
 
-require golang.org/x/text v0.9.0
+require golang.org/x/text v0.20.0
