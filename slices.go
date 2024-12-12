@@ -1,5 +1,7 @@
 package utils
 
+import "bytes"
+
 // Add s to slice.
 // If s exists in slice, return slice as is.
 // Add s to the beginning of slice if addToFront is true.
@@ -56,4 +58,13 @@ func MaxValueIndex(array []int) (maxValueIndex int) {
 		}
 	}
 	return
+}
+
+// None separator join
+func JoinBytes(source [][]byte) []byte {
+	var buffer bytes.Buffer
+	for _, b := range source {
+		buffer.Write(b)
+	}
+	return buffer.Bytes()
 }
