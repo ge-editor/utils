@@ -24,17 +24,6 @@ func RunesToBytes(runes []rune) []byte {
 	return buf
 }
 
-// RunesToBytes は、ルーンのスライスをバイトスライスに変換します。
-/*
-func RunesToBytes(runes []rune) []byte {
-	var buf []byte
-	for _, r := range runes {
-		buf = append(buf, []byte(string(r))...)
-	}
-	return buf
-}
-*/
-
 // Guess the width of the rune for console screen.
 //
 // 種類の説明:
@@ -104,20 +93,97 @@ func WidthKindString(ch rune) string {
 	}
 }
 
-// Check if a string contains a specific character
-// case insensitive
-func ContainsAllCharacters(str, characters string) bool {
-	return ContainsAllCharactersCaseSensitive(strings.ToLower(str), strings.ToLower(characters))
+// ContainsAllCharactersCaseSensitive checks whether all characters
+// in "characters" appear in order within "str".
+func ContainsAllCharactersCaseSensitive(str, characters string) bool {
+	start := 0
+
+	for _, char := range characters {
+		idx := strings.IndexRune(str[start:], char)
+		if idx < 0 {
+			return false
+		}
+
+		start += idx + 1
+	}
+
+	return true
 }
 
 // Check if a string contains a specific character
 // case sensitive
+/*
 func ContainsAllCharactersCaseSensitive(str, characters string) bool {
 	for _, char := range characters {
 		if !strings.ContainsRune(str, char) {
 			return false
 		}
 	}
+	return true
+}
+*/
+
+// Check if a string contains a specific character
+// case insensitive
+func ContainsAllCharacters(str, characters string) bool {
+	return ContainsAllCharactersCaseSensitive(strings.ToLower(str), strings.ToLower(characters))
+}
+
+// FindOrderedCharactersCaseSensitive finds characters in order.
+// Example:
+// "split vertical", "sv" => {0,6}
+// "split vertical", "vt" => {6,10}
+func FindOrderedCharactersCaseSensitive(str, characters string) []byte {
+	result := make([]byte, 0, len(characters))
+
+	start := 0
+
+	for _, char := range characters {
+		idx := strings.IndexRune(str[start:], char)
+		if idx < 0 {
+			return nil
+		}
+
+		pos := start + idx
+
+		if pos > 255 {
+			return nil
+		}
+
+		result = append(result, byte(pos))
+
+		start = pos + 1
+	}
+
+	return result
+}
+
+// FindAllCharacters returns the position of each character.
+// Case insensitive.
+// If any character is not found, nil is returned.
+func FindAllCharacters(str, characters string) []byte {
+	return FindOrderedCharactersCaseSensitive(
+		strings.ToLower(str),
+		strings.ToLower(characters),
+	)
+}
+
+// PrefixMatchTokens reports whether every token in input
+// is a prefix of the corresponding token in candidate.
+func PrefixMatchTokens(candidate, input string) bool {
+	candidateTokens := strings.Fields(candidate)
+	inputTokens := strings.Fields(input)
+
+	if len(inputTokens) > len(candidateTokens) {
+		return false
+	}
+
+	for i, token := range inputTokens {
+		if !strings.HasPrefix(candidateTokens[i], token) {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -165,3 +231,31 @@ func ReverseUTF8Bytes(bytes []byte) []byte {
 	}
 	return results
 }
+
+/*
+func NormalizeASCII(r rune) rune {
+	// 全角 ASCII: U+FF01 ～ U+FF5E
+	if r >= '！' && r <= '～' {
+		return r - 0xFEE0
+	}
+
+	// 全角スペース
+	if r == '　' {
+		return ' '
+	}
+
+	return r
+}
+
+func NormalizeKey(r rune) rune {
+	if r >= '！' && r <= '～' {
+		r -= 0xFEE0
+	}
+
+	if 'A' <= r && r <= 'Z' {
+		r += 'a' - 'A'
+	}
+
+	return r
+}
+*/
