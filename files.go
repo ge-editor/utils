@@ -273,6 +273,7 @@ func ExistsFile(filename string) bool {
 	return err == nil
 }
 
+/*
 // ファイルシステムに存在しないファイルは、
 // パス名が一致するかで判定
 func SameFile(path1, path2 string) bool {
@@ -317,6 +318,34 @@ func SameFile(path1, path2 string) bool {
 	}
 
 	// その他のエラー（権限等）
+	return false
+}
+*/
+
+// IsSameFileInfo reports whether fi1 and fi2 describe the same file.
+func IsSameFileInfo(fi1, fi2 os.FileInfo) bool {
+	if fi1 == nil || fi2 == nil {
+		return false
+	}
+	return os.SameFile(fi1, fi2)
+}
+
+// IsSameFile reports whether path1 and path2 refer to the same file.
+// If neither path exists, it compares their normalized paths.
+func IsSameFile(path1, path2 string) bool {
+	fi1, err1 := os.Stat(path1)
+	fi2, err2 := os.Stat(path2)
+
+	if err1 == nil && err2 == nil {
+		return os.SameFile(fi1, fi2)
+	}
+
+	// Both paths do not exist: compare normalized paths.
+	if errors.Is(err1, os.ErrNotExist) &&
+		errors.Is(err2, os.ErrNotExist) {
+		return normalizePath(path1) == normalizePath(path2)
+	}
+
 	return false
 }
 
