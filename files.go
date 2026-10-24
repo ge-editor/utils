@@ -273,54 +273,27 @@ func ExistsFile(filename string) bool {
 	return err == nil
 }
 
-/*
-// ファイルシステムに存在しないファイルは、
-// パス名が一致するかで判定
-func SameFile(path1, path2 string) bool {
-	// 両方 Stat
-	_, err1 := os.Stat(path1)
-	_, err2 := os.Stat(path2)
+// IsWithinDir reports whether path is within dir, including dir itself.
+// It compares normalized paths without resolving symbolic links.
+func IsWithinDir(path, dir string) bool {
+	path = normalizePath(path)
+	dir = normalizePath(dir)
 
-	// 両方存在する場合
-	if err1 == nil && err2 == nil {
-		// シンボリックリンク解決
-		p1, err := filepath.EvalSymlinks(path1)
-		if err != nil {
-			p1 = path1
-		}
-		p2, err := filepath.EvalSymlinks(path2)
-		if err != nil {
-			p2 = path2
-		}
-
-		// 絶対パス化
-		p1, _ = filepath.Abs(p1)
-		p2, _ = filepath.Abs(p2)
-
-		i1, e1 := os.Stat(p1)
-		i2, e2 := os.Stat(p2)
-		if e1 == nil && e2 == nil {
-			return os.SameFile(i1, i2)
-		}
+	rel, err := filepath.Rel(dir, path)
+	if err != nil {
 		return false
 	}
 
-	// 片方だけ存在する
-	if (err1 == nil) != (err2 == nil) {
-		return false
-	}
-
-	// 両方存在しない場合
-	if errors.Is(err1, os.ErrNotExist) && errors.Is(err2, os.ErrNotExist) {
-		p1 := normalizePath(path1)
-		p2 := normalizePath(path2)
-		return p1 == p2
-	}
-
-	// その他のエラー（権限等）
-	return false
+	return rel == "." ||
+		(rel != ".." &&
+			!strings.HasPrefix(rel, ".."+string(filepath.Separator)))
 }
-*/
+
+// RelativePath returns the path relative to dir.
+// It returns an error if the paths cannot be compared.
+func RelativePath(path, dir string) (string, error) {
+	return filepath.Rel(normalizePath(dir), normalizePath(path))
+}
 
 // IsSameFileInfo reports whether fi1 and fi2 describe the same file.
 func IsSameFileInfo(fi1, fi2 os.FileInfo) bool {
@@ -364,30 +337,3 @@ func normalizePath(p string) string {
 
 	return p
 }
-
-/*
-func SameFile(path1, path2 string) bool {
-	info1, err1 := os.Stat(path1)
-	info2, err2 := os.Stat(path2)
-
-	// 両方存在する場合
-	if err1 == nil && err2 == nil {
-		return os.SameFile(info1, info2)
-	}
-
-	// 片方だけ存在する場合
-	if (err1 == nil) != (err2 == nil) {
-		return false
-	}
-
-	// 両方とも存在しない場合
-	if errors.Is(err1, os.ErrNotExist) && errors.Is(err2, os.ErrNotExist) {
-		p1 := filepath.Clean(path1)
-		p2 := filepath.Clean(path2)
-		return p1 == p2
-	}
-
-	// その他のエラー（権限など）
-	return false
-}
-*/
