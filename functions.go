@@ -2,7 +2,7 @@ package utils
 
 // Find overlap between two ranges
 // Range is 2 integers greater than or equal to 0
-func FindOverlap(range1Start, range1End, range2Start, range2End int) (int, int) {
+/* func FindOverlap(range1Start, range1End, range2Start, range2End int) (int, int) {
 	start := max(range1Start, range2Start)
 	end := min(range1End, range2End)
 
@@ -13,7 +13,7 @@ func FindOverlap(range1Start, range1End, range2Start, range2End int) (int, int) 
 
 	// not overlap
 	return -1, -1
-}
+} */
 
 func TabWidth(cursorPosition int, tabWidth int) int {
 	tabstop := cursorPosition + 1
@@ -34,8 +34,9 @@ func Threshold(maxThreshold, screenSize int) int {
 	return maxThreshold
 }
 
-func Swap[T any](a *T, b *T) {
+/* func Swap[T any](a *T, b *T) {
 	temp := *a
 	*a = *b
 	*b = temp
 }
+*/

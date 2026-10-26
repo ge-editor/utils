@@ -143,7 +143,7 @@ func Dirwalk2(dir string) []FileEvent {
 	return paths
 }
 
-func StartWalkAsync(root string, depth int) (chan FileEvent, *context.CancelFunc) {
+/* func StartWalkAsync(root string, depth int) (chan FileEvent, *context.CancelFunc) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	fileCh := make(chan FileEvent, 512)
@@ -166,7 +166,7 @@ func StartWalkAsync(root string, depth int) (chan FileEvent, *context.CancelFunc
 	}()
 
 	return fileCh, &cancel
-}
+} */
 
 func WalkAsync(
 	ctx context.Context,
