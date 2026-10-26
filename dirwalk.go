@@ -21,7 +21,7 @@ type inodeKey struct {
 
 const maxWorkers = 16 // ← SSDなら16, HDDなら4〜8推奨
 
-func DirwalkSafe(root string) ([]FileEvent, error) {
+/* func DirwalkSafe(root string) ([]FileEvent, error) {
 	visited := make(map[inodeKey]struct{})
 	var result []FileEvent
 
@@ -83,7 +83,7 @@ func walk(path string, visited map[inodeKey]struct{}, out *[]FileEvent) error {
 	}
 
 	return nil
-}
+} */
 
 func DirwalkParallelCtxDepth(ctx context.Context, root string, maxDepth int) []FileEvent {
 	var results []FileEvent
