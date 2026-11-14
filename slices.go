@@ -5,6 +5,19 @@ import (
 	"slices"
 )
 
+// MoveToFront moves s[i] to the front of s. The elements before it shift back
+// by one, so the relative order of all the other elements stays the same. It
+// does nothing when i is 0 or out of range. It changes s in place and does not
+// allocate.
+func MoveToFront[T any](s []T, i int) {
+	if i <= 0 || i >= len(s) {
+		return
+	}
+	v := s[i]
+	copy(s[1:i+1], s[:i])
+	s[0] = v
+}
+
 // EnsureSize expands the slice b.rows so that rowIndex becomes addressable.
 func EnsureSize[T any](ary *[]T, index int) {
 	if index < len(*ary) {

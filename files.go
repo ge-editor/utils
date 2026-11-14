@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 )
@@ -274,10 +273,13 @@ func ExistsFile(filename string) bool {
 }
 
 // IsWithinDir reports whether path is within dir, including dir itself.
-// It compares normalized paths without resolving symbolic links.
+// It compares normalized paths without resolving symbolic links. Case is
+// ignored when the file system that holds dir ignores it
+// (see IsCaseInsensitivePath).
 func IsWithinDir(path, dir string) bool {
-	path = normalizePath(path)
-	dir = normalizePath(dir)
+	fold := IsCaseInsensitivePath(dir)
+	path = normalizePath(path, fold)
+	dir = normalizePath(dir, fold)
 
 	rel, err := filepath.Rel(dir, path)
 	if err != nil {
@@ -290,9 +292,43 @@ func IsWithinDir(path, dir string) bool {
 }
 
 // RelativePath returns the path relative to dir.
-// It returns an error if the paths cannot be compared.
+// It returns an error if the paths cannot be compared. Case is ignored when
+// the file system that holds dir ignores it (see IsCaseInsensitivePath); the
+// result keeps the case of path.
 func RelativePath(path, dir string) (string, error) {
-	return filepath.Rel(normalizePath(dir), normalizePath(path))
+	fold := IsCaseInsensitivePath(dir)
+	rel, err := filepath.Rel(normalizePath(dir, fold), normalizePath(path, fold))
+	if err != nil || !fold {
+		return rel, err
+	}
+	return restoreCase(rel, normalizePath(path, false)), nil
+}
+
+// restoreCase gives rel, which was computed from lower-cased paths, the case
+// of the original path: the ".." elements stay and the other elements are the
+// last elements of orig.
+func restoreCase(rel, orig string) string {
+	if rel == "." {
+		return rel
+	}
+	sep := string(filepath.Separator)
+	elems := strings.Split(rel, sep)
+	origElems := strings.Split(orig, sep)
+
+	var out []string
+	keep := 0
+	for _, e := range elems {
+		if e == ".." {
+			out = append(out, e)
+		} else {
+			keep++
+		}
+	}
+	if keep > len(origElems) {
+		return rel
+	}
+	out = append(out, origElems[len(origElems)-keep:]...)
+	return filepath.Join(out...)
 }
 
 // IsSameFileInfo reports whether fi1 and fi2 describe the same file.
@@ -304,7 +340,8 @@ func IsSameFileInfo(fi1, fi2 os.FileInfo) bool {
 }
 
 // IsSameFile reports whether path1 and path2 refer to the same file.
-// If neither path exists, it compares their normalized paths.
+// If neither path exists, it compares their normalized paths; case is ignored
+// when the file systems of both paths ignore it (see IsCaseInsensitivePath).
 func IsSameFile(path1, path2 string) bool {
 	fi1, err1 := os.Stat(path1)
 	fi2, err2 := os.Stat(path2)
@@ -316,13 +353,16 @@ func IsSameFile(path1, path2 string) bool {
 	// Both paths do not exist: compare normalized paths.
 	if errors.Is(err1, os.ErrNotExist) &&
 		errors.Is(err2, os.ErrNotExist) {
-		return normalizePath(path1) == normalizePath(path2)
+		fold := IsCaseInsensitivePath(path1) && IsCaseInsensitivePath(path2)
+		return normalizePath(path1, fold) == normalizePath(path2, fold)
 	}
 
 	return false
 }
 
-func normalizePath(p string) string {
+// normalizePath makes p absolute and clean. With fold it is also lower-cased,
+// so that paths on a case-insensitive file system compare equal.
+func normalizePath(p string, fold bool) string {
 	p = filepath.Clean(p)
 
 	abs, err := filepath.Abs(p)
@@ -330,8 +370,7 @@ func normalizePath(p string) string {
 		p = abs
 	}
 
-	// Windows は大文字小文字を区別しない
-	if runtime.GOOS == "windows" {
+	if fold {
 		p = strings.ToLower(p)
 	}
 
