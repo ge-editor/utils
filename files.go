@@ -376,3 +376,16 @@ func normalizePath(p string, fold bool) string {
 
 	return p
 }
+
+// GetExecutableBaseName は自身の実行ファイル名（拡張子なし）を返します。
+// 英数は小文字に変換されます。
+func GetExecutableBaseName() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return "ge_error"
+	}
+
+	base := filepath.Base(exePath)
+	ext := filepath.Ext(base)
+	return strings.ToLower(strings.TrimSuffix(base, ext))
+}
