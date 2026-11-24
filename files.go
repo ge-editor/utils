@@ -225,7 +225,7 @@ func WalkAsync(
 			if match == "" {
 				out <- FileEvent{e.Name(), e.IsDir()}
 			} else {
-				if ContainsAllCharacters(e.Name(), match) {
+				if ContainsOrderedAllCharacters(e.Name(), match) {
 					out <- FileEvent{e.Name(), e.IsDir()}
 				}
 			}
